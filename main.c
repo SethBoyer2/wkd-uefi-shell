@@ -66,19 +66,42 @@ BOOLEAN StringsEqual(const CHAR16 *A, const CHAR16 *B, const UINTN txtLim) {
 	return FALSE;
 }
 
-/*
-Need a strip() function for space ignoring for commands
 
-need to accept buffer, strip it, and return buffer
-*/
-// void Strip(CHAR16 *Buffer, Position){
-// 	for (UINTN i = 0; i < Position; i++){
-// 		if (Buffer[i] == L' ') {
-// 			Buffer[i] = L'\0';
-// 		}
+void Strip(CHAR16 *Buffer){
+	UINTN start = 0;
+	UINTN end = 0;
 
-// 	}
-// }
+	// Find first character that isn't a space
+	while (Buffer[start] == L' ') {
+		start++;
+	}
+	// if the whole string was spaces, clear & return
+	if (Buffer[start] == L'\0') {
+		Buffer[0] = L'\0';
+		return;
+	}
+	// find end of string
+	while (Buffer[end] != L'\0') {
+		end++;
+	}
+	end--; // step to character before null terminator
+
+	// backtrack to drop trailing spaces
+	while(end >= start && Buffer[end] == L' ') {
+		end--;
+	}
+
+	// shift characters to the front of the buffer
+	UINTN i = 0;
+	while (start <= end) {
+		Buffer[i] = Buffer[start];
+		i++;
+		start++;
+	}
+
+	// cap off buffer w/ null terminator
+	Buffer[i] = L'\0';
+}
 
 /*
 	Returns number of iterations through a string until null terminator is found
@@ -135,27 +158,28 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 		);
 
 		// HANDLE ENTER
-		if (Key.UnicodeChar == L'\r') // If character = linebreak (enter) exit program
+		if (Key.UnicodeChar == L'\r') 
 		{
-
-			if (Len(Buffer, 32) == 4) {
-				ST->ConOut->OutputString(ST->ConOut, L"wooo it worked");
-			};
-
-			//Strip(Buffer, Position);
+			Strip(Buffer);
 			// keep comparisons above buffer reset
 			if (StringsEqual(Buffer, CommandNames[CMD_HELP], 4)) {
-				Status = ST->ConOut->OutputString(ST->ConOut, L"\r\nFull Match\r\n");
+				Status = ST->ConOut->OutputString(ST->ConOut, L"\r\n'clear' | Clears screen\r\n'info'  | Displays basic WKD shell information\r\n");
 				if (EFI_ERROR(Status)) {
 					return Status;
 				}
 			} else if (StringsEqual(Buffer, CommandNames[CMD_CLEAR], 5)) {
 				cls();
+
+			} else if (StringsEqual(Buffer, CommandNames[CMD_INFO], 4)) {
+				ST->ConOut->OutputString(ST->ConOut, L"\r\n--- WKD Shell ---\r\n");
+				ST->ConOut->OutputString(ST->ConOut, L"\r\n| The WKD shell is an experimental EFI shell, written using GNU-EFI without most of the basic libraries/in-built functions, running python-like, purpose-built  helper functions|\r\n");
+
 			} else{
 				ST->ConOut->OutputString(ST->ConOut, L"\r\nUnrecognized Command: ");
 				ST->ConOut->OutputString(ST->ConOut, Buffer);
 				ST->ConOut->OutputString(ST->ConOut, L"\r\n");
 			}
+
 
 			// This creates a new line. Keep this above buffer reset and below everything else
 			ST->ConOut->OutputString(ST->ConOut, L"\r\n");

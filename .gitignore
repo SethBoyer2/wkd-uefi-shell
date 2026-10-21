@@ -1,0 +1,4 @@
+*.o
+/OVMF_VARS.fd
+/fat.img
+/BOOTX64.EFI
