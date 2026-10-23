@@ -122,6 +122,10 @@ void cls(void) {
 	ST->ConOut->ClearScreen(ST->ConOut);
 }
 
+void print(CHAR16* String) {
+	ST->ConOut->OutputString(ST->ConOut, String);
+}
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
 	/* hold EFI status and input key*/
@@ -137,11 +141,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
 	/* clear efi boot msgs & output title text */
 	cls();
-	ST->ConOut->OutputString(ST->ConOut, L"-------------------------------\r\n");
-	ST->ConOut->OutputString(ST->ConOut, L"Wicked Firmware Shell 1.0.1\r\n");
-	ST->ConOut->OutputString(ST->ConOut, L"-------------------------------\r\n");
-	ST->ConOut->OutputString(ST->ConOut, L"Available Commands: \r\n help \r\n clear\r\n\r\n");
-	ST->ConOut->OutputString(ST->ConOut, L"WKD:> ");
+	print(L"-------------------------------\r\n");
+	print(L"Wicked Firmware Shell 1.0.1\r\n");
+	print(L"-------------------------------\r\n");
+	print(L"Available Commands: \r\n help \r\n clear\r\n\r\n");
+	print(L"WKD:> ");
 
 
 	/* Clear system buffer to prevent accidental keypresses */
@@ -152,7 +156,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 	// Declare loop
 	while (1)
 	{
-    	Status = ST->ConIn->ReadKeyStroke( // Read input
+    	ST->ConIn->ReadKeyStroke( // Read input
 			ST->ConIn,
 			&Key
 		);
@@ -163,27 +167,25 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 			Strip(Buffer);
 			// keep comparisons above buffer reset
 			if (StringsEqual(Buffer, CommandNames[CMD_HELP], 4)) {
-				Status = ST->ConOut->OutputString(ST->ConOut, L"\r\n'clear' | Clears screen\r\n'info'  | Displays basic WKD shell information\r\n");
-				if (EFI_ERROR(Status)) {
-					return Status;
-				}
+				print(L"\r\n'clear' | Clears screen\r\n'info'  | Displays basic WKD shell information\r\n");
+
 			} else if (StringsEqual(Buffer, CommandNames[CMD_CLEAR], 5)) {
 				cls();
 
 			} else if (StringsEqual(Buffer, CommandNames[CMD_INFO], 4)) {
-				ST->ConOut->OutputString(ST->ConOut, L"\r\n--- WKD Shell ---\r\n");
-				ST->ConOut->OutputString(ST->ConOut, L"\r\n| The WKD shell is an experimental EFI shell, written using GNU-EFI without most of the basic libraries/in-built functions, running python-like, purpose-built  helper functions|\r\n");
+				print(L"\r\n--- WKD Shell ---\r\n");
+				print(L"\r\n| The WKD shell is an experimental EFI shell, written using GNU-EFI without most of the basic libraries/in-built functions, running python-like, purpose-built  helper functions|\r\n");
 
 			} else{
-				ST->ConOut->OutputString(ST->ConOut, L"\r\nUnrecognized Command: ");
-				ST->ConOut->OutputString(ST->ConOut, Buffer);
-				ST->ConOut->OutputString(ST->ConOut, L"\r\n");
+				print(L"\r\nUnrecognized Command: ");
+				print(Buffer);
+				print(L"\r\n");
 			}
 
 
 			// This creates a new line. Keep this above buffer reset and below everything else
-			ST->ConOut->OutputString(ST->ConOut, L"\r\n");
-			ST->ConOut->OutputString(ST->ConOut, L"WKD:> "); // print the prompt at each new line
+			print(L"\r\n");
+			print(L"WKD:> "); // print the prompt at each new line
 
 			// This resets the buffer. Keep this at the bottom of this conditional
 			Position = 0;
@@ -201,8 +203,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 				ST->ConOut,
 				L"KEYBOARD ERROR\r\n"
 			);
-
-			while (1) { }
 		}
 
 		// If backspace, decrement index and terminate entry
